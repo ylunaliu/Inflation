@@ -25,7 +25,7 @@ def find_injectable_sets(graph, hidden_nodes):
             split_index.append(splita[1])
             diction = dict(zip(split_key, split_index))
         nodes_ancestor.append(diction)
-    
+  
     # Get the arrays of ancestor correspond to each nodes
     nodes_ancestor = np.array(list(nodes_ancestor))
 
@@ -55,13 +55,15 @@ def find_injectable_sets(graph, hidden_nodes):
             index_node = []
             boolean_set = []
             for node in duplicate_node:
-                    boolean_set.append(ancestor_1[node]!=ancestor_2[node])
+                print(node)
+                boolean_set.append(ancestor_1[node]!=ancestor_2[node])
             if(not True in boolean_set):
                 injectable_pair.append(sets)
     
     sprial_injectable.add_edges_from(injectable_pair)
     injectable_sets = list(nx.find_cliques(sprial_injectable))
-    return injectable_sets
+    print(injectable_sets)
+    return injectable_sets, dictionary
 
 
 
@@ -81,5 +83,8 @@ if __name__ == "__main__":
 
     sprial_inflation_hidden = list(["X2", "Y2", "Z2", "X1", "Y1", "Z1"])
 
-    injectable_sets = find_injectable_sets(sprial_inflation, sprial_inflation_hidden)
+    cut_inflation = nx.DiGraph()
+    cut_inflation.add_edges_from([("Y2", "A2"), ("X1", "A2"), ("X1", "C1"), ("Z1", "C1"), ("Z1", "B1"), ("Y1", "B1")])
+    cut_inflation_hidden = list(["Y1", "Y2", "X1", "Z1"])
+    injectable_sets, dictionary = find_injectable_sets(cut_inflation, cut_inflation_hidden)
     print(injectable_sets)
