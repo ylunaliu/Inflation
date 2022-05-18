@@ -1,9 +1,11 @@
 from os import dup
 from platform import node
+import string
 import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
 import itertools
+from itertools import chain
 
 
 def find_injectable_sets(graph, hidden_nodes):
@@ -55,14 +57,16 @@ def find_injectable_sets(graph, hidden_nodes):
             index_node = []
             boolean_set = []
             for node in duplicate_node:
-                print(node)
                 boolean_set.append(ancestor_1[node]!=ancestor_2[node])
             if(not True in boolean_set):
                 injectable_pair.append(sets)
     
     sprial_injectable.add_edges_from(injectable_pair)
     injectable_sets = list(nx.find_cliques(sprial_injectable))
-    print(injectable_sets)
+    result = np.unique(list(chain.from_iterable(injectable_sets)))
+    for element in result:
+        injectable_sets.append([element])
+
     return injectable_sets, dictionary
 
 
@@ -86,5 +90,6 @@ if __name__ == "__main__":
     cut_inflation = nx.DiGraph()
     cut_inflation.add_edges_from([("Y2", "A2"), ("X1", "A2"), ("X1", "C1"), ("Z1", "C1"), ("Z1", "B1"), ("Y1", "B1")])
     cut_inflation_hidden = list(["Y1", "Y2", "X1", "Z1"])
-    injectable_sets, dictionary = find_injectable_sets(cut_inflation, cut_inflation_hidden)
+    injectable_sets, dictionary = find_injectable_sets(sprial_inflation, sprial_inflation_hidden)
     print(injectable_sets)
+    
