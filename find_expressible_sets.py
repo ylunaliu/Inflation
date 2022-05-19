@@ -73,10 +73,15 @@ if __name__ == "__main__":
                                 ("Z1", "C1"), ("Z1", "B1"), ("Z1", "C2")])
 
     sprial_inflation_hidden = list(["X2", "Y2", "Z2", "X1", "Y1", "Z1"])
+    cut_inflation = nx.DiGraph()
+    cut_inflation.add_edges_from([("Y2", "A2"), ("X1", "A2"), ("X1", "C1"), ("Z1", "C1"), ("Z1", "B1"), ("Y1", "B1")])
+    cut_inflation_hidden = list(["Y1", "Y2", "X1", "Z1"])
 
-    injectable_sets1, dictionary = find_injectable_sets(sprial_inflation, sprial_inflation_hidden)
-    print(f"this is the injectable sets{injectable_sets1}")
+    injectable_sets, maximum_injectable_sets1, dictionary = find_injectable_sets(cut_inflation, cut_inflation_hidden)
+    print(f"this is the injectable sets{maximum_injectable_sets1}")
     
-    expressible = find_expressible_sets(injectable_sets1, dictionary)
+    expressible = find_expressible_sets(maximum_injectable_sets1, dictionary)
     print(f"This is the expressible_sets{expressible}")
 
+    # Only need the maximum injectable sets
+    # Also maximum exprssible sets
