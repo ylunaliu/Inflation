@@ -7,6 +7,7 @@ import numpy as np
 import itertools
 from find_expressible_sets import find_expressible_sets
 from sympy.physics.quantum import TensorProduct
+from maximum_expressible_set import maximum_expressible
 
 # Now I have the injectable sets and the expressible sets
 sprial_inflation = nx.DiGraph()
@@ -17,8 +18,12 @@ sprial_inflation.add_edges_from([("X2", "C2"), ("Z2", "B2"), ("Y2", "A2"),
 
 sprial_inflation_hidden = list(["X2", "Y2", "Z2", "X1", "Y1", "Z1"])
 
-injectable_sets, maximum_injectable_sets1, dictionary = find_injectable_sets(sprial_inflation, sprial_inflation_hidden)
-expressible = find_expressible_sets(maximum_injectable_sets1, dictionary)
+injectable_sets_max, injectable_sets1, dictionary = find_injectable_sets(sprial_inflation, sprial_inflation_hidden)
+expressible = find_expressible_sets(injectable_sets1, dictionary)
+print(expressible)
+maximum_expressible_sets = maximum_expressible(expressible)
+print(f"here is the maximum injectable_sets {injectable_sets_max}")
+print(f"here is the maximum_expressible_sets {maximum_expressible_sets}")
 
 w_support = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
 orginal_node = ["A", "B", "C"]
