@@ -92,5 +92,6 @@ if __name__ == "__main__":
     cut_inflation.add_edges_from([("Y2", "A2"), ("X1", "A2"), ("X1", "C1"), ("Z1", "C1"), ("Z1", "B1"), ("Y1", "B1")])
     cut_inflation_hidden = list(["Y1", "Y2", "X1", "Z1"])
     injectable_sets_max, injectable_sets, dictionary = find_injectable_sets(sprial_inflation, sprial_inflation_hidden)
-    print(injectable_sets_max)
+
+    print(injectable_sets_max.index([0, 0]))
     

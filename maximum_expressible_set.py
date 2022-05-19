@@ -20,22 +20,22 @@ def maximum_expressible(expressible):
     acc = []
     acc_joined = []
     for each_expressible_set in expressible:
-        print(f"here is the expressible set{each_expressible_set}")
+        # print(f"here is the expressible set{each_expressible_set}")
         joined_num = len(each_expressible_set)
-        print(f"length of the expressible set{joined_num}")
+        # print(f"length of the expressible set{joined_num}")
         joined = append_list(each_expressible_set)
         joined_num_node = len(joined)
-        print(f"here is after they joined{joined}")
+        # print(f"here is after they joined{joined}")
         if(acc == []):
             acc.append(each_expressible_set)
             acc_joined.append(joined)
-        print(f"here is acc_joined{acc_joined}")
+        # print(f"here is acc_joined{acc_joined}")
         boolean_ifsubset = False
         for i, element in enumerate(acc_joined):
-            print(f"here is the element in acc_joined{element}")
-            print(f"compare with {joined}")
+            # print(f"here is the element in acc_joined{element}")
+            # print(f"compare with {joined}")
             if(set(joined).issubset(set(element))):
-                print(f"length of the one to compare{len(acc[i])}")
+                # print(f"length of the one to compare{len(acc[i])}")
                 if(len(joined)==len(acc_joined[i]) and (joined_num_node - joined_num)<(len(acc_joined[i])-len(acc[i]))):
                     acc.remove(acc[i])
                     acc.append(each_expressible_set)
@@ -50,9 +50,9 @@ def maximum_expressible(expressible):
                 boolean_ifsubset = True
         if(boolean_ifsubset):    
             acc.append(each_expressible_set)
-            print(f"here is the acc{acc}")
+            # print(f"here is the acc{acc}")
             acc_joined.append(joined)
-            print(f"here is the joined accumulator{acc_joined}")
+            # print(f"here is the joined accumulator{acc_joined}")
     return acc
 if __name__ == "__main__":
     sprial_inflation = nx.DiGraph()
