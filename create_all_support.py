@@ -111,7 +111,7 @@ def rule_out_infeasible_due_to_injectable_sets(dictionary_not_possible, injectab
     # Find the 
 
     support_compatible = remove_from_index(all_support, index2)
-    print(support_compatible)
+    return support_compatible
     # print(len(all_support1))
         #
 

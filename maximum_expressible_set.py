@@ -53,7 +53,7 @@ def maximum_expressible(expressible):
             # print(f"here is the acc{acc}")
             acc_joined.append(joined)
             # print(f"here is the joined accumulator{acc_joined}")
-    return acc
+    return acc, acc_joined
 if __name__ == "__main__":
     sprial_inflation = nx.DiGraph()
     sprial_inflation.add_edges_from([("X2", "C2"), ("Z2", "B2"), ("Y2", "A2"),
