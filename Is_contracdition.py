@@ -38,7 +38,7 @@ def is_condraction_for_support_given_inflation(the_support_to_test, inflation_gr
     dictionary_margin = dict(zip(orginal_nodes, marginal_original_node))
 
     # Dictionary for checking the marginals for injectabke sets
-    key_dictionary_marginal= is_support_compatible.dictionary_marginal(injectable_sets_max)
+    key_dictionary_marginal= is_support_compatible.dictionary_marginal(injectable_sets_max, dictionary_margin)
 
     # Create all supports that's possible for the given inflation
     node_support = np.sort(np.array(sprial2.nodes))
@@ -72,7 +72,11 @@ if __name__ == "__main__":
 
     sprial_inflation_hidden = list(["X2", "Y2", "Z2", "X1", "Y1", "Z1"])
 
+    cut_inflation = nx.DiGraph()
+    cut_inflation.add_edges_from([("Y2", "A2"), ("X1", "A2"), ("X1", "C1"), ("Z1", "C1"), ("Z1", "B1"), ("Y1", "B1")])
+    cut_inflation_hidden = list(["Y1", "Y2", "X1", "Z1"])
+
     w_support = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
     orginal_node = ["A", "B", "C"]
 
-    is_condraction_for_support_given_inflation(w_support, sprial_inflation, sprial_inflation_hidden, orginal_node)
+    is_condraction_for_support_given_inflation(w_support, cut_inflation, cut_inflation_hidden, orginal_node)

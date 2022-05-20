@@ -108,14 +108,7 @@ def rule_out_infeasible_due_to_injectable_sets(dictionary_not_possible, injectab
     index_to_be_remove = np.array(index_to_be_remove)
     index = np.arange(0,len(all_support),1)
     index2 = np.array(list(set(index)^set(index_to_be_remove)))
-    # Find the 
+
 
     support_compatible = remove_from_index(all_support, index2)
     return support_compatible
-    # print(len(all_support1))
-        #
-
-
-    # marginals = cut_marginal_from_orginal_support(all_support, cutting_index)
-    # print(marginals)
-    # print(np.where(marginals==[0, 0]))
