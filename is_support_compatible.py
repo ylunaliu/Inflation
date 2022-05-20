@@ -80,9 +80,9 @@ def check_for_contracdition(dictionary_marginals_compatible, dictionary_marginal
         is_expressible_not_compelete.append(len(dictionary_marginals_compatible[str(expressible_set)])< len(dictionary_marginals_expreesbile[str(expressible_set)]))
     
     if(True in is_expressible_not_compelete):
-        print("We reach a contraction, the support is not compatible with given inflation")
+        print("We reach a contradition, the support is not compatible with given inflation")
         return False
     else:
-        print("No condraction found for the support given this inflation")
+        print("No contradtion found for the support given this inflation")
         return True
 

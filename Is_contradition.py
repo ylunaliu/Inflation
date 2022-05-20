@@ -20,9 +20,11 @@ def is_condraction_for_support_given_inflation(the_support_to_test, inflation_gr
 
     # Find it's injectable set
     injectable_sets_max, injectable_sets1, dictionary = find_injectable_sets(inflation_graph, inflation_graph_hidden_nodes)
+    print(f"This is the maximum injectable set{injectable_sets_max}")
 
     # Find it's expressible_sets
     expressible = find_expressible_sets(injectable_sets1, dictionary)
+    print(f"This is the maximum expressible set{expressible}")
 
     # Find it's maximum expressible_sets
     maximum_expressible_sets, acc_joined = maximum_expressible(expressible)
@@ -49,6 +51,8 @@ def is_condraction_for_support_given_inflation(the_support_to_test, inflation_gr
 
     # Generate all feasible support
     support_compatible = create_all_support.rule_out_infeasible_due_to_injectable_sets(dictionary_not_possible, injectable_sets_max, supports, node_support)
+    print(support_compatible)
+    print(len(support_compatible))
 
     # Dictionary contain the marginals for all the expressible sets
     key_dictionary_marginal_expressible = is_support_compatible.dictionary_marginal_expressible(maximum_expressible_sets, dictionary_margin)
@@ -79,4 +83,10 @@ if __name__ == "__main__":
     w_support = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
     orginal_node = ["A", "B", "C"]
 
-    is_condraction_for_support_given_inflation(w_support, cut_inflation, cut_inflation_hidden, orginal_node)
+
+    ring_six_inflation = nx.DiGraph()
+    ring_six_inflation.add_edges_from([("X1", "A1"), ("X1", "B1"), ("Y1", "B1"), ("Y1", "C1"), 
+                                       ("Z1", "C1"), ("Z1", "A2"), ("X2", "A2"), ("X2", "B2"),
+                                       ("Y2", "B2"), ("Y2", "C2"), ("Z2", "C2"), ("Z2", "A1")])
+    ring_six_inflation_hidden = list(["X1", "X2", "Y1", "Y2", "Z1", "Z2"])
+    is_condraction_for_support_given_inflation(w_support, ring_six_inflation, ring_six_inflation_hidden, orginal_node)
