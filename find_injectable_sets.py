@@ -12,7 +12,7 @@ def find_injectable_sets(graph, hidden_nodes):
     """ 
     Description: Find all injectable sets when given an inflation graph and it's hidden_nodes
 
-    Paramaters:
+    Parameters:
     ------------
     graph: A networkx directed graph object <class 'networks.classes.digraph.DiGraph'>
 
