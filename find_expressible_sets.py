@@ -10,7 +10,7 @@ def find_expressible_sets(injectable_sets, dictionary):
     """ 
     Description: Find all expressible sets when given an complete injectable sets and dictionary contain the nodes and it's ancestor
 
-    Paramaters:
+    Parameters:
     ------------
     injectable_sets: A list of lists contain all the injectable sets, noted it is not the maximum injectable set
 
