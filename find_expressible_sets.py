@@ -17,7 +17,7 @@ def find_expressible_sets(injectable_sets, dictionary):
 
     # Get all the nodes
     nodes = list(expressible_graph.nodes)
-
+    print(nodes)
     # Get all the combinations of two nodes
     combinations = list(itertools.combinations(nodes,2))
 

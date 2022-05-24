@@ -10,6 +10,7 @@ from sympy.physics.quantum import TensorProduct
 from maximum_expressible_set import maximum_expressible
 
 def create_support(nodes, bit):
+    #!!! need to make it more general
     """
     given list of sorted nodes, create all possible support given number of bits
     """
