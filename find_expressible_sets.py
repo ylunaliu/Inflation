@@ -7,6 +7,19 @@ import numpy as np
 import itertools
 
 def find_expressible_sets(injectable_sets, dictionary):
+    """ 
+    Description: Find all expressible sets when given an complete injectable sets and dictionary contain the nodes and it's ancestor
+
+    Paramaters:
+    ------------
+    injectable_sets: A list of lists contain all the injectable sets, noted it is not the maximum injectable set
+
+    dictionary: The dictionary contain key as the observed node and value as it's ancestor
+   
+    Return
+    ------------
+    expressible_convert: A list of lists, the expressible set  
+    """
 
     # Create a sub graph for the expressible sets
     expressible_graph = nx.Graph()
@@ -17,7 +30,7 @@ def find_expressible_sets(injectable_sets, dictionary):
 
     # Get all the nodes
     nodes = list(expressible_graph.nodes)
-    print(nodes)
+
     # Get all the combinations of two nodes
     combinations = list(itertools.combinations(nodes,2))
 
@@ -29,7 +42,7 @@ def find_expressible_sets(injectable_sets, dictionary):
         injectable_sets_node1 = expressible_graph.nodes[str(node1)]["sets"] # node attribute, an injectable set
         injectable_sets_node1_ancestor = {}
         for i in range(len(injectable_sets_node1)):
-            injectable_sets_node1_ancestor.update(dictionary[str(injectable_sets_node1[i])]) # Get the common ancestor
+            injectable_sets_node1_ancestor.update(dictionary[str(injectable_sets_node1[i])]) # Get the common ancestor for all nodes in an injectable set
 
         injectable_sets_node2 = expressible_graph.nodes[str(node2)]["sets"]
         injectable_sets_node2_ancestor = {}
@@ -41,7 +54,7 @@ def find_expressible_sets(injectable_sets, dictionary):
             # Find the duplicate 
             duplicate_node = list(set([*injectable_sets_node1_ancestor]).intersection([*injectable_sets_node2_ancestor]))
 
-            for node in duplicate_node:
+            for node in duplicate_node: # Check if there is any shared ancestor, not up to index difference
                 boolean_set.append(injectable_sets_node1_ancestor[node]==injectable_sets_node2_ancestor[node])
                 
         if(not True in boolean_set):
@@ -52,15 +65,13 @@ def find_expressible_sets(injectable_sets, dictionary):
     expressible_graph.add_edges_from(experssible_pair)
     expressible_sets = list(nx.find_cliques(expressible_graph))
 
-
     expressible_convert = [] # Convert from the number nodes representation to expressible sets
     for injectable_node in expressible_sets:
-        if(len(injectable_node)>1):
+        if(len(injectable_node)>1): # Eliminate the one that stand alone
             all_stuff = []
             for i in range(len(injectable_node)):
                 all_stuff.append(expressible_graph.nodes[injectable_node[i]]["sets"])
             expressible_convert.append(all_stuff)
-    
     
     return expressible_convert
 
@@ -77,11 +88,8 @@ if __name__ == "__main__":
     cut_inflation.add_edges_from([("Y2", "A2"), ("X1", "A2"), ("X1", "C1"), ("Z1", "C1"), ("Z1", "B1"), ("Y1", "B1")])
     cut_inflation_hidden = list(["Y1", "Y2", "X1", "Z1"])
 
-    injectable_sets, maximum_injectable_sets1, dictionary = find_injectable_sets(cut_inflation, cut_inflation_hidden)
-    print(f"this is the injectable sets{maximum_injectable_sets1}")
+    maximum_injectable_sets, injectable_sets, dictionary = find_injectable_sets(sprial_inflation, sprial_inflation_hidden)
+    print(f"this is the injectable sets{maximum_injectable_sets}")
     
-    expressible = find_expressible_sets(maximum_injectable_sets1, dictionary)
+    expressible = find_expressible_sets(injectable_sets, dictionary)
     print(f"This is the expressible_sets{expressible}")
-
-    # Only need the maximum injectable sets
-    # Also maximum exprssible sets

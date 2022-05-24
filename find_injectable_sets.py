@@ -90,6 +90,11 @@ def find_injectable_sets(graph, hidden_nodes):
     # Find cliques, if cliques -> it's a injectable set
     injectable_sets = list(nx.find_cliques(subgraph_injectable))
 
+    # Not sure if this is necessary, TODO: Double check with Elie for injectable set and expressible set if the if statement is needed
+    for injectable_set in injectable_sets:
+        if(len(injectable_sets)==1):
+            injectable_sets.remove(injectable_set)
+
     # This is the maximum injectable sets
     injectable_sets_max = injectable_sets.copy() 
 
@@ -144,7 +149,5 @@ if __name__ == "__main__":
     cut_inflation.add_edges_from([("Y2", "A2"), ("X1", "A2"), ("X1", "C1"), ("Z1", "C1"), ("Z1", "B1"), ("Y1", "B1")])
     cut_inflation_hidden = list(["Y1", "Y2", "X1", "Z1"])
     injectable_sets_max, injectable_sets, dictionary = find_injectable_sets(sprial_inflation, sprial_inflation_hidden)
-
     print(dictionary)
-
     
