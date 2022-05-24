@@ -71,5 +71,5 @@ if __name__ == "__main__":
     # expressible_test2 = [[["A"], ["B"], ["C"]],[["A"], ["B", "C"]], [["C"], "D"]]
     # expressible_test3 = [[['A1'], ['C2']], [['B1', 'C2'], ['A2']], [['B2', 'A1'], ['C2']]]
     expressible_test4 = [[['B1', 'C2'], ['A2']], [['B1'], ['A2']]]
-    acc= maximum_expressible(expressible)
-    print(f"here is the maximum expressible set{acc}")
+    acc,acc_joined= maximum_expressible(expressible)
+    print(f"here is the maximum expressible set{acc},")

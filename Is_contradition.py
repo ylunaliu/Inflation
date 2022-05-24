@@ -84,7 +84,7 @@ if __name__ == "__main__":
     cut_inflation.add_edges_from([("Y2", "A2"), ("X1", "A2"), ("X1", "C1"), ("Z1", "C1"), ("Z1", "B1"), ("Y1", "B1")])
     cut_inflation_hidden = list(["Y1", "Y2", "X1", "Z1"])
 
-    w_support = np.array([[1, 0, 1]])
+    w_support = np.array([[1, 0, 0],[0, 1, 0], [0, 0, 1]])
     orginal_node = ["A", "B", "C"]
 
 
@@ -93,4 +93,4 @@ if __name__ == "__main__":
                                        ("Z1", "C1"), ("Z1", "A2"), ("X2", "A2"), ("X2", "B2"),
                                        ("Y2", "B2"), ("Y2", "C2"), ("Z2", "C2"), ("Z2", "A1")])
     ring_six_inflation_hidden = list(["X1", "X2", "Y1", "Y2", "Z1", "Z2"])
-    is_condraction_for_support_given_inflation(w_support, ring_six_inflation, ring_six_inflation_hidden, orginal_node)
+    is_condraction_for_support_given_inflation(w_support, sprial_inflation, sprial_inflation_hidden, orginal_node)
