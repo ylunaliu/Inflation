@@ -69,10 +69,10 @@ def is_condraction_for_support_given_inflation(the_support_to_test, inflation_gr
 if __name__ == "__main__":
     # Given an inflation graph
     sprial_inflation = nx.DiGraph()
-    sprial_inflation.add_edges_from([("X2", "C2"), ("Z2", "B2"), ("Y2", "A2"),
+    sprial_inflation.add_edges_from([("X2", "C#1"), ("Z2", "B2"), ("Y2", "A2"),
                             ("X1", "A2"), ("X1", "A1"), ("X1", "C1"), 
                             ("Y1", "A1"), ("Y1", "B1"), ("Y1", "B2"), 
-                            ("Z1", "C1"), ("Z1", "B1"), ("Z1", "C2")])
+                            ("Z1", "C1"), ("Z1", "B1"), ("Z1", "C#1")])
 
     sprial_inflation_hidden = list(["X2", "Y2", "Z2", "X1", "Y1", "Z1"])
 
