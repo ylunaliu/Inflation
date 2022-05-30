@@ -2,7 +2,7 @@
 Finding the injectable and expressible sets of an inflation graph
 
 1. Version 1:
-find_injectable_sets: Find all injectable sets in a given graph. 
+find_injectable_sets: Find all injectable sets in a given graph<br />
 find_expressible_sets: Find all expressible sets in a given graph. 
 find_maximum_expressible_sets: Find the maximum expressible sets in a given graph. 
 Is_contradtion.py: Find all the non-forbidden events using injectable set, and see if it reach a contradition with the marginals of expressible sets. 
