@@ -44,9 +44,9 @@ def find_injectable_sets(graph, hidden_nodes):
         split_index = []
         split_key = []
         for i in range(len(ancestors)):
-            split_node = split(ancestors[i]) # Split the nodes, if I need to do TODO at some point need to modify the split function 
+            split_node = split_anynode(ancestors[i]) # Split the nodes, if I need to do TODO at some point need to modify the split function 
             split_key.append(split_node[0])
-            split_index.append(split_node[1])
+            split_index.append(split_node[1:])
             diction = dict(zip(split_key, split_index))
         nodes_ancestor.append(diction)
 
@@ -105,6 +105,20 @@ def find_injectable_sets(graph, hidden_nodes):
 
     return injectable_sets_max, injectable_sets, dictionary
 
+def split_anynode(node):
+    """
+    Descrption: used to split the node name
+
+    Parameter:
+    ------------
+    node: str
+
+    Return:
+    ------------
+    A list containing the first and the rest of the characters in the node.
+    """
+    first, rest = node[0], node[1:]
+    return [first,rest]
 
 
 def split(word):

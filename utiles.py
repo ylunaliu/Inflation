@@ -7,7 +7,7 @@ def break_marginal(support):
 
     Parameters:
     ------------
-    support: A 2D numpy array, 
+    support: A 2D numpy array
    
     Return
     ------------
@@ -154,7 +154,16 @@ def find_marginal_support_given_joined_expressible_set(expressible_set_joined, d
         marginal_expressible_set.append(dictionary_margin_compatible_all_nodes[element])
     marginal_expressible_set= np.array(marginal_expressible_set).T
     marginal_expressible_set = np.array(list(((map(np.asarray, set(map(tuple, marginal_expressible_set)))))))
-    print(f"The is the marginal_expreesible_set {marginal_expressible_set} for expressible_set_joined{expressible_set_joined}")
+    # print(f"The is the marginal_expreesible_set {marginal_expressible_set} for expressible_set_joined{expressible_set_joined}")
+    return marginal_expressible_set
+
+def find_marginal_support_given_set_with_repitation(expressible_set_joined, dictionary_margin_compatible_all_nodes):
+    marginal_expressible_set = []
+    for element in expressible_set_joined:
+        marginal_expressible_set.append(dictionary_margin_compatible_all_nodes[element])
+    marginal_expressible_set= np.array(marginal_expressible_set).T
+    # marginal_expressible_set = np.array(list(((map(np.asarray, set(map(tuple, marginal_expressible_set)))))))
+    # print(f"The is the marginal_expreesible_set {marginal_expressible_set} for expressible_set_joined{expressible_set_joined}")
     return marginal_expressible_set
 
 def make_dictionary_for_nonforbidden_expressible_marginals(expressible_sets, expressible_sets_joined, dictionary_margin_compatible_all_nodes):
