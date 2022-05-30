@@ -50,6 +50,9 @@ def is_condraction_for_support_given_inflation(the_support_to_test, inflation_gr
 
     # Generate all non-forbidden event
     event_non_forbidden = utiles_reject_forbidden_events.rule_out_forbidden_events_due_to_injectable_sets(dictionary_not_possible, injectable_sets_max, supports, node_support)
+    print(event_non_forbidden)
+    dictionary_event_non_forbidden = dict(zip(node_support, event_non_forbidden))
+    print(dictionary_event_non_forbidden)
     display_events = np.vstack((node_support, event_non_forbidden))
     print(f"This is the nonforbidden events:\n {display_events}")
 
@@ -68,17 +71,17 @@ def is_condraction_for_support_given_inflation(the_support_to_test, inflation_gr
     is_contradition = utiles.check_for_contracdition(dictionay_non_forbidden_events, key_dictionary_marginal_expressible, maximum_expressible_sets)
 if __name__ == "__main__":
     # Given an inflation graph
-    sprial_inflation = nx.DiGraph()
-    sprial_inflation.add_edges_from([("X2", "C#1"), ("Z2", "B2"), ("Y2", "A2"),
-                            ("X1", "A2"), ("X1", "A1"), ("X1", "C1"), 
-                            ("Y1", "A1"), ("Y1", "B1"), ("Y1", "B2"), 
-                            ("Z1", "C1"), ("Z1", "B1"), ("Z1", "C#1")])
+    # sprial_inflation = nx.DiGraph()
+    # sprial_inflation.add_edges_from([("X2", "C#1"), ("Z2", "B2"), ("Y2", "A2"),
+    #                         ("X1", "A2"), ("X1", "A1"), ("X1", "C1"), 
+    #                         ("Y1", "A1"), ("Y1", "B1"), ("Y1", "B2"), 
+    #                         ("Z1", "C1"), ("Z1", "B1"), ("Z1", "C#1")])
 
-    sprial_inflation_hidden = list(["X2", "Y2", "Z2", "X1", "Y1", "Z1"])
+    # sprial_inflation_hidden = list(["X2", "Y2", "Z2", "X1", "Y1", "Z1"])
 
-    cut_inflation = nx.DiGraph()
-    cut_inflation.add_edges_from([("Y2", "A2"), ("X1", "A2"), ("X1", "C1"), ("Z1", "C1"), ("Z1", "B1"), ("Y1", "B1")])
-    cut_inflation_hidden = list(["Y1", "Y2", "X1", "Z1"])
+    # cut_inflation = nx.DiGraph()
+    # cut_inflation.add_edges_from([("Y2", "A2"), ("X1", "A2"), ("X1", "C1"), ("Z1", "C1"), ("Z1", "B1"), ("Y1", "B1")])
+    # cut_inflation_hidden = list(["Y1", "Y2", "X1", "Z1"])
 
     w_support = np.array([[1, 0, 0],[0, 1, 0], [0, 0, 1]])
     orginal_node = ["A", "B", "C"]
@@ -89,4 +92,4 @@ if __name__ == "__main__":
                                        ("Z1", "C1"), ("Z1", "A2"), ("X2", "A2"), ("X2", "B2"),
                                        ("Y2", "B2"), ("Y2", "C2"), ("Z2", "C2"), ("Z2", "A1")])
     ring_six_inflation_hidden = list(["X1", "X2", "Y1", "Y2", "Z1", "Z2"])
-    is_condraction_for_support_given_inflation(w_support, sprial_inflation, sprial_inflation_hidden, orginal_node)
+    is_condraction_for_support_given_inflation(w_support, ring_six_inflation, ring_six_inflation_hidden, orginal_node)
