@@ -61,6 +61,7 @@ def create_dictionary_for_all_injectable_set_not_possible(injectable_sets, dicti
         
     return dictionary_not_possible
 
+
 def cut_marginal_from_orginal_support(all_support, cutting_index):
     """ 
     Description: Cut out the marginals for each node

@@ -26,28 +26,13 @@ def d_separation_list(graph, hidden_nodes):
         # Now I get a pair of nodes I can regenerate the powerset for the nodes
         new_nodes = remove_element_list(list(combination[i]), list(nodes))
         sets_z = powerset(new_nodes)
-        # print(sets_z)
         for_each_d_separation= []
         for j in range(len(sets_z)):
-            # print({combination[i][0]})
-            # print({combination[i][1]})
-            # print(convert_format_for_networkx(sets_z[j]))
-            # print(set(sets_z[j]))
-            # print(type({'A1'}))
-            # if(check_d_separation_total(graph, combination[i], sets_z[j])==True):
-            # print(nx.d_separated(graph, {'A1'}, {'B1'}, set(sets_z[j])))
             if(nx.d_separated(graph, {combination[i][0]}, {combination[i][1]}, set(sets_z[j]))==True):
                 for_each_d_separation.append([[combination[i][0]], [combination[i][1]], sets_z[j]])
-                # print(for_each_d_separation)
         d_separation_list1.extend(for_each_d_separation)
 
     return d_separation_list1
-
-# def convert_format_for_networkx(list):
-#     if(len(list)==0):
-#         return {}
-
-#     return ('{}'.format(list)).replace('[','{').replace(']','}')
 
 def remove_element_list(list1, list2):
     new_sets = list(set(list2).difference(list1))

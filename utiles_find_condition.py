@@ -1,3 +1,5 @@
+from enum import unique
+from xml.dom.minidom import Element
 from sympy import evaluate, sec
 from maximum_expressible_set import append_list
 from ssl import ALERT_DESCRIPTION_BAD_RECORD_MAC
@@ -14,7 +16,7 @@ from utiles import break_marginal
 import check_d_networks
 np.set_printoptions(threshold=sys.maxsize)
 
-def all_d_separate_relations(d_separation_relations: list, marginals_dic):
+def all_d_separate_relations(d_separation_relations: list, marginals_dic, event_non_forbidden, marginals_unique_dic, nodes):
     """
     Description: get the final containors, the largerst wrappers, for each d-separation-relaion, we get all combinations of value that the d-separation relation
                 can take, then for each combinations, we get the value that the elements of the d-separation can take, then for each element, we get the events that
@@ -26,12 +28,14 @@ def all_d_separate_relations(d_separation_relations: list, marginals_dic):
     d-separation-relations: All d-separation relations to consider
     marginals_dic: A dictionary of marginals for the non-forbidden events
     """
+    unique_support = list([0,1,2])
     container = []
     for each_d_separation_relation in d_separation_relations:
+        print(f"here is each d separation {each_d_separation_relation}") #1
         all = generate_formula_given_d_separation(each_d_separation_relation)
         second = all[1]
-        combination_marginals,length = generate_combinations(second)
-        container.append(get_all_possiblility(length, all, marginals_dic, event_non_forbidden,combination_marginals))
+        combination_marginals, length = generate_combinations(second, unique_support, marginals_unique_dic, nodes) # I should move this out of here
+        container.append(get_all_possiblility(length, all, marginals_dic, event_non_forbidden, combination_marginals))
     return container
 
 def generate_formula_given_d_separation(d_separation_relation: list):
@@ -49,6 +53,7 @@ def generate_formula_given_d_separation(d_separation_relation: list):
     list containing the four elements from the d-separation relations: P(CD)P(ABCD) = P(ACD)P(BCD)
                                                                        [["C", "D"], ["A", "B", "C", "D"], ["A", "C", "D], ["B", "C", "D"]]
     """
+    print(d_separation_relation)
     first_element =  np.sort(d_separation_relation[2])
     second_element = np.sort(append_list(d_separation_relation))
     third_element = np.sort(append_list(list([d_separation_relation[0], d_separation_relation[2]])))
@@ -69,8 +74,18 @@ def get_marginals_non_forbidden_events(events, nodes:list):
     marginals_non_forbidden_dictionary: The dictionary contains the node and the marginals for that nodes
     """
     marginals_non_forbidden = break_marginal(events)
+    unique = []
+    for marginal in marginals_non_forbidden:
+        unique.append(np.unique(np.array(marginal)))
+    
+    # nodes_mode = []
+    # for node in nodes:
+    #     nodes_mode.append([node])
+    # print(nodes_mode)
+    
+    marginals_unique = dict(zip(nodes, unique))
     marginals_non_forbidden_dictionary = dict(zip(nodes, marginals_non_forbidden))
-    return marginals_non_forbidden_dictionary
+    return marginals_non_forbidden_dictionary, marginals_unique
 
 def get_all_possiblility(length, list_of_elements, marginals_dic_elements, events_non_forbidden, combination_marginals):
     """
@@ -91,6 +106,7 @@ def get_all_possiblility(length, list_of_elements, marginals_dic_elements, event
     """
     containers = []
     for i in range(length):
+        print(f"here is for each combination{i}")
         events_for_formula = get_events_given_formula(list_of_elements, marginals_dic_elements, i, events_non_forbidden, combination_marginals)
         containers.append(events_for_formula)
 
@@ -128,7 +144,7 @@ def get_events_given_formula(list_of_elements, marginals_dic_elements, i, events
         # Get the marginals for that element in the non-forbidden events
         marginals_element = utiles.find_marginal_support_given_set_with_repitation(element, marginals_dic_elements)
         some_events = find_events_satisfy_condition(value_of_element, marginals_element, events_non_forbidden)
-        # print(f"here is the all events statisfy the conditions{some_events} for {element} equal to {value_of_element}")
+        print(f"here is the all events statisfy the conditions{some_events} for {element} equal to {value_of_element}")
         results.append(some_events)
         
     print(f"here is the result for the elements {list_of_elements}, the result{results}")
@@ -158,10 +174,11 @@ def find_events_satisfy_condition(value_of_element: np.ndarray, marginals_elemen
 
     return np.array(all_events_satisfy)
 
-def generate_combinations(second_element, unique_support=list([0,1])):
+def generate_combinations(second_element, unique_support, marginals_unique_dic, nodes):
     """
     TODO: !!! Remember to pass in unique_spport when combine with the main script
     Description: get all the combinations of nodes that's in the second element of the d-separation relation
+    TODO: looks suspecious might need to look more into it, for example can all nodes takes all values?
 
     Parameters:
     ------------
@@ -173,16 +190,47 @@ def generate_combinations(second_element, unique_support=list([0,1])):
     length: The number of total combinations that we can get
     combination_marginals: Dictionary. The marginals for the nodes in second elements
     """
+    filter_not_complete = []
+    filter_not_complete_value = []
+    for i, node in enumerate(second_element):
+        if(not np.array_equal(marginals_unique_dic[node], np.array(unique_support))):
+            print(np.array_equal(marginals_unique_dic[node], np.array(unique_support)))
+            filter_not_complete.append(i)
+            filter_not_complete_value.append(np.setdiff1d(np.array(unique_support), marginals_unique_dic[node]))
+    
+    
     combinations = create_support(second_element, unique_support)
+    print(combinations)
+    
+    if(len(filter_not_complete)!=0):
+        combinations = np.array(filter_not_complete_events(combinations, filter_not_complete, filter_not_complete_value))
+
+
     marginals = break_marginal(combinations)
+    print(f"here is the marginals{marginals}")
     combination_marginals = dict(zip(second_element, marginals))
     length = len(combinations)
     return combination_marginals, length
 
+def filter_not_complete_events(combinations, filter_not_complete, filter_not_complete_value):
+    index_to_abandon = []
+    new_combinations = []
+    for each_node_index in filter_not_complete:
+        for forbidden_value in filter_not_complete_value[each_node_index]:
+            marginal = combinations[:,each_node_index]
+            index_to_abandon.extend(np.where(marginal==forbidden_value)[0])
+    
+    index_to_abandon = list(set(index_to_abandon))
+    index = np.arange(0,len(combinations),1)
+    index_to_keep = np.array(list(set(index)^set(index_to_abandon)))
 
+    for index in index_to_keep:
+        new_combinations.append(combinations[index])
+
+    return(new_combinations)
 
 if __name__ == "__main__":
-    # d_separation_relation = list([['B1'], ['B2'], ['A2']])
+    d1 = list([[['B1'], ['B2'], ['A2']]])
 
     # For my reference, to use this one, I need
     #                                   1. Non-forbidden-events generated from is_contradiction
@@ -208,7 +256,8 @@ if __name__ == "__main__":
                                     [1, 0, 0, 1, 1, 0],
                                     [1, 1, 0, 0, 0, 0]])
     nodes = list(['A1','A2','B1','B2','C1','C2'])
-    marginals_dic= get_marginals_non_forbidden_events(event_non_forbidden, nodes)
+    marginals_dic, marginals_unique_dic= get_marginals_non_forbidden_events(event_non_forbidden, nodes)
+    print(marginals_unique_dic)
     # print(marginals_dic)
     # all = generate_formula_given_d_separation(d_separation_relation)
     # # print(all)
@@ -225,7 +274,7 @@ if __name__ == "__main__":
                                        ("Y2", "B2"), ("Y2", "C2"), ("Z2", "C2"), ("Z2", "A1")])
     ring_six_inflation_hidden = list(["X1", "X2", "Y1", "Y2", "Z1", "Z2"])
 
-    d = check_d_networks.d_separation_list(ring_six_inflation, ring_six_inflation_hidden)
+    # d = check_d_networks.d_separation_list(ring_six_inflation, ring_six_inflation_hidden)
 
-    containers = all_d_separate_relations(d, marginals_dic)
-    print(len(containers))
+    containers = all_d_separate_relations(d1, marginals_dic, event_non_forbidden, marginals_unique_dic, nodes)
+    print(np.size(containers))
