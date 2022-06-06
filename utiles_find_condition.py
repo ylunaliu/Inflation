@@ -1,4 +1,5 @@
 from enum import unique
+from re import I
 from xml.dom.minidom import Element
 from sympy import evaluate, sec
 from maximum_expressible_set import append_list
@@ -16,7 +17,7 @@ from utiles import break_marginal
 import check_d_networks
 np.set_printoptions(threshold=sys.maxsize)
 
-def all_d_separate_relations(d_separation_relations: list, marginals_dic, event_non_forbidden, marginals_unique_dic, nodes):
+def all_d_separate_relations(d_separation_relations: list, marginals_dic, event_non_forbidden, marginals_unique_dic, dic_event_to_variable):
     """
     Description: get the final containors, the largerst wrappers, for each d-separation-relaion, we get all combinations of value that the d-separation relation
                 can take, then for each combinations, we get the value that the elements of the d-separation can take, then for each element, we get the events that
@@ -28,14 +29,33 @@ def all_d_separate_relations(d_separation_relations: list, marginals_dic, event_
     d-separation-relations: All d-separation relations to consider
     marginals_dic: A dictionary of marginals for the non-forbidden events
     """
-    unique_support = list([0,1,2])
+    unique_support = list([0,1])
+    # global number_to_index_from
+    # number_to_index_from =len(event_non_forbidden)
+
+    number_to_index_from = {}
+    f = open("myfile.txt", "w")
+    number_to_index_from['index'] = len(event_non_forbidden)+1
+    dictionary_variable_margins_P = {}
     container = []
+    d_assignment_constraint1 = [] 
+    constraint_each_margin_P1 = []
     for each_d_separation_relation in d_separation_relations:
+        f.write(f"Here is the d-separation: {each_d_separation_relation}\n")
+        print(number_to_index_from)
         print(f"here is each d separation {each_d_separation_relation}") #1
         all = generate_formula_given_d_separation(each_d_separation_relation)
         second = all[1]
-        combination_marginals, length = generate_combinations(second, unique_support, marginals_unique_dic, nodes) # I should move this out of here
-        container.append(get_all_possiblility(length, all, marginals_dic, event_non_forbidden, combination_marginals))
+        combination_marginals, length = generate_combinations(second, unique_support, marginals_unique_dic) # I should move this out of here
+        print(f"length of combinations{length}")
+        container1, d_assignment_constraint, constraint_each_margin_P = get_all_possiblility(length, all, marginals_dic, event_non_forbidden, combination_marginals, dic_event_to_variable,number_to_index_from, dictionary_variable_margins_P,f)
+        container.append(container1)
+        d_assignment_constraint1.extend(d_assignment_constraint)
+        constraint_each_margin_P1.extend(constraint_each_margin_P)
+
+    f.write(f"with d_assignment_constrant {d_assignment_constraint1}\n")
+    f.write(f"with constraint each margin {constraint_each_margin_P1}\n")
+    print(f"This is the size of constraint each margin {len(constraint_each_margin_P1)}")
     return container
 
 def generate_formula_given_d_separation(d_separation_relation: list):
@@ -53,7 +73,7 @@ def generate_formula_given_d_separation(d_separation_relation: list):
     list containing the four elements from the d-separation relations: P(CD)P(ABCD) = P(ACD)P(BCD)
                                                                        [["C", "D"], ["A", "B", "C", "D"], ["A", "C", "D], ["B", "C", "D"]]
     """
-    print(d_separation_relation)
+    # print(d_separation_relation)
     first_element =  np.sort(d_separation_relation[2])
     second_element = np.sort(append_list(d_separation_relation))
     third_element = np.sort(append_list(list([d_separation_relation[0], d_separation_relation[2]])))
@@ -78,16 +98,11 @@ def get_marginals_non_forbidden_events(events, nodes:list):
     for marginal in marginals_non_forbidden:
         unique.append(np.unique(np.array(marginal)))
     
-    # nodes_mode = []
-    # for node in nodes:
-    #     nodes_mode.append([node])
-    # print(nodes_mode)
-    
     marginals_unique = dict(zip(nodes, unique))
     marginals_non_forbidden_dictionary = dict(zip(nodes, marginals_non_forbidden))
     return marginals_non_forbidden_dictionary, marginals_unique
 
-def get_all_possiblility(length, list_of_elements, marginals_dic_elements, events_non_forbidden, combination_marginals):
+def get_all_possiblility(length, list_of_elements, marginals_dic_elements, events_non_forbidden, combination_marginals, dic_event_to_variable, number_to_index_from, dictionary_variable_margins_P, f):
     """
     Description: get all possibility of the value that the formula can take
 
@@ -105,14 +120,20 @@ def get_all_possiblility(length, list_of_elements, marginals_dic_elements, event
                 For example, P(CD)P(ABCD) = P(ACD)P(BCD), it will contains the events from A=a1, b=b1, c=c1, d=d1 to A=a16, B = b16, C=c16, D=d16
     """
     containers = []
+    d_assignment_constraint1 = []
+    constraint_each_margin_P1 = []
     for i in range(length):
-        print(f"here is for each combination{i}")
-        events_for_formula = get_events_given_formula(list_of_elements, marginals_dic_elements, i, events_non_forbidden, combination_marginals)
+
+        f.write(f"This is for assignment{i}\n")
+        events_for_formula, d_assignment_constraint, constraint_each_margin_P= get_events_given_formula(list_of_elements, marginals_dic_elements, i, events_non_forbidden, combination_marginals, dic_event_to_variable, number_to_index_from, dictionary_variable_margins_P,f)
+        d_assignment_constraint1.extend(d_assignment_constraint)
+        constraint_each_margin_P1.extend(constraint_each_margin_P)
         containers.append(events_for_formula)
+        f.write(f"Here is the main constraint so far {d_assignment_constraint1}\n")
+        f.write(f"Here is the subsequent P constraint so far {constraint_each_margin_P1}\n")
+    return containers, d_assignment_constraint1, constraint_each_margin_P1
 
-    return containers
-
-def get_events_given_formula(list_of_elements, marginals_dic_elements, i, events_non_forbidden, combination_maginals):
+def get_events_given_formula(list_of_elements, marginals_dic_elements, j, events_non_forbidden, combination_maginals, dic_event_to_variable,number_to_index_from,dictionary_variable_margins_P, my_file):
     """
     Description: For the four elements for a d-separation relation, for each elements find the events that satisfy the condition
 
@@ -131,28 +152,55 @@ def get_events_given_formula(list_of_elements, marginals_dic_elements, i, events
              [[all possible events for C=c1, D=d1], [all possible events for A=a1, B=b1, C=c1, D=d1], [all possible events for A=a1, C=c1, D=d1], [all possible events for B=b1, C=c1, D=d1]
     """
     results = []
+    key_varaible_for_margins = []
+    constraint_P_list = []
+    constraint_each_margin_P = []
     # Loop through the elements
-    for element in list_of_elements:
-        print(f"This is the elemnt {element}")
+
+    for i, element in enumerate(list_of_elements):
         value_of_element = []
+        # print(f"This is the elemnt {element}")
         # Get the specific value that this element can take from combination_marginals
         for item in element:
-            value_item = combination_maginals[item][i]
+            value_item = combination_maginals[item][j]
+            # print(f"This is the node{item} the index{i}")
             value_of_element.append(value_item)
-        print(f"This is the value of element{value_of_element}")
+        
+        # print(f"value_of_element{value_of_element}")
+        # print(f"This is the value of element{value_of_element}")
 
         # Get the marginals for that element in the non-forbidden events
         marginals_element = utiles.find_marginal_support_given_set_with_repitation(element, marginals_dic_elements)
-        some_events = find_events_satisfy_condition(value_of_element, marginals_element, events_non_forbidden)
-        print(f"here is the all events statisfy the conditions{some_events} for {element} equal to {value_of_element}")
-        results.append(some_events)
+        # print(f"This is the marginals_elements {element}")
+        key_varaible_for_margins = [list(element), value_of_element]
+        if(not (str(key_varaible_for_margins) in dictionary_variable_margins_P)):
+            value_number_to_index_from = number_to_index_from["index"]
+            number_to_index_from["index"] = value_number_to_index_from+ 1
+            dictionary_variable_margins_P[str(key_varaible_for_margins)] = number_to_index_from["index"]
+            # print(f"here is the label for p: {value_number_to_index_from+ 1}\n")
         
-    print(f"here is the result for the elements {list_of_elements}, the result{results}")
+        # Get the constraints for Ps
 
-    return results
+        constraint_P_list.append(dictionary_variable_margins_P[str(key_varaible_for_margins)])
+        # print(f"dictionary_variavle_marginals{dictionary_variable_margins_P}")
+        some_events, SAT_conversion = find_events_satisfy_condition(value_of_element, marginals_element, events_non_forbidden, dic_event_to_variable)
+        # print(f"here is the all events statisfy the conditions{SAT_conversion} for {element} equal to {value_of_element}")
+        
+        constraint_P = get_constraint_P(SAT_conversion, dictionary_variable_margins_P[str(key_varaible_for_margins)])
+        constraint_each_margin_P.append(constraint_P)
+        my_file.write(f"Here is the constraint_P: {constraint_P} with p equal to {dictionary_variable_margins_P[str(key_varaible_for_margins)]}\n")
+        results.append(some_events)
+    
+    # print(f"This is the constrain given by one assignment on P {constraint_each_margin_P}")
+    d_assignment_constraint = get_constraint_d_assignment(constraint_P_list)
+    my_file.write(f"here is the constraint given by P constraint_list: {d_assignment_constraint}\n")
+    my_file.write(f"here is the P constraint list{constraint_P_list}\n")
+    # print(f"here is the result for the elements {list_of_elements}, the result{results}")
+
+    return results, d_assignment_constraint, constraint_each_margin_P
 
 
-def find_events_satisfy_condition(value_of_element: np.ndarray, marginals_element, events_non_forbidden):
+def find_events_satisfy_condition(value_of_element: np.ndarray, marginals_element, events_non_forbidden, dic_event_to_variable):
     """
     Description: Given one element in the d-separation equation, find all events in the non-forbidden event that satisfy the condition
 
@@ -166,15 +214,19 @@ def find_events_satisfy_condition(value_of_element: np.ndarray, marginals_elemen
     Return
     ------------
     all_events_satisfy: All the events that satisfy the condition [event1, event2, ... event n]
+    SAT_conversion: A list contain all the variable used to represent events in SAT compatible format
     """
     all_events_satisfy = []
+    SAT_conversion = []
     for i, element in enumerate(marginals_element):
         if(np.array_equal(element, value_of_element)):
             all_events_satisfy.append(events_non_forbidden[i])
+            SAT_conversion.append(dic_event_to_variable[str(events_non_forbidden[i])])
+           
+    # print(f"This the the SAT_conversion: {SAT_conversion}")
+    return np.array(all_events_satisfy), SAT_conversion
 
-    return np.array(all_events_satisfy)
-
-def generate_combinations(second_element, unique_support, marginals_unique_dic, nodes):
+def generate_combinations(second_element, unique_support, marginals_unique_dic):
     """
     TODO: !!! Remember to pass in unique_spport when combine with the main script
     Description: get all the combinations of nodes that's in the second element of the d-separation relation
@@ -200,14 +252,12 @@ def generate_combinations(second_element, unique_support, marginals_unique_dic, 
     
     
     combinations = create_support(second_element, unique_support)
-    print(combinations)
     
     if(len(filter_not_complete)!=0):
         combinations = np.array(filter_not_complete_events(combinations, filter_not_complete, filter_not_complete_value))
 
 
     marginals = break_marginal(combinations)
-    print(f"here is the marginals{marginals}")
     combination_marginals = dict(zip(second_element, marginals))
     length = len(combinations)
     return combination_marginals, length
@@ -229,9 +279,48 @@ def filter_not_complete_events(combinations, filter_not_complete, filter_not_com
 
     return(new_combinations)
 
-if __name__ == "__main__":
-    d1 = list([[['B1'], ['B2'], ['A2']]])
+def non_forbidden_events_variable_dic(event_non_forbidden):
+    """"
+    Assigning variable to each non forbidden events
+    Key(str(event_non_forbidden[0]))
+    """
+    dic_event_to_variable = {}
+    for i, each_event in enumerate(event_non_forbidden):
+        dic_event_to_variable[str(each_event)] = i+1
+    
+    return dic_event_to_variable
 
+def get_constraint_P(events_num, P_num):
+    """
+    events: list of events's numebr [1,4,5]...
+    P: A single numer
+
+    This is the additional variable that helps with simfiply the case. P = (e1 v e2 v e3) can be written as (~P1 v e1 v e2 v e3)^(P1 v ~(e1 ^ e2 ^e3))
+    then (~P1 v e1 v e2 v e3)^(P1 v ~e1)^(P1 v ~e2)^(P1 v ~e3) 
+    """
+    constraint = []
+    first_element = list([-P_num])
+    first_element.extend(events_num)
+    constraint.append(first_element)
+
+    for event in events_num:
+        constraint.append([P_num, -1*(event)])
+
+    return constraint
+    
+def get_constraint_d_assignment(P_num_list):
+    """
+    Produce the constraint for d-separation in cnf form
+    P_num_list = [var_firstele...var_lastele]
+    """
+    print()
+    return ([[-P_num_list[0], -P_num_list[1], P_num_list[2]],[-P_num_list[0], -P_num_list[1], P_num_list[3]],[-P_num_list[3], -P_num_list[2], P_num_list[1]],[-P_num_list[3], -P_num_list[2], P_num_list[0]]])
+
+if __name__ == "__main__":
+    d1 = list([[['B1'], ['B2'], ['A2']],[['C2'], ['B2'], ['C1']]])
+
+    # get_constraint_P([1,5,6], 9)
+    # get_constraint_d_assignment([1,2,3,4])
     # For my reference, to use this one, I need
     #                                   1. Non-forbidden-events generated from is_contradiction
     #                                   2. Nodes of the inflation graph
@@ -255,9 +344,12 @@ if __name__ == "__main__":
                                     [1, 0, 0, 1, 0, 0],
                                     [1, 0, 0, 1, 1, 0],
                                     [1, 1, 0, 0, 0, 0]])
+
+    dic_event_to_variable = non_forbidden_events_variable_dic(event_non_forbidden)
     nodes = list(['A1','A2','B1','B2','C1','C2'])
     marginals_dic, marginals_unique_dic= get_marginals_non_forbidden_events(event_non_forbidden, nodes)
-    print(marginals_unique_dic)
+   
+   
     # print(marginals_dic)
     # all = generate_formula_given_d_separation(d_separation_relation)
     # # print(all)
@@ -274,7 +366,7 @@ if __name__ == "__main__":
                                        ("Y2", "B2"), ("Y2", "C2"), ("Z2", "C2"), ("Z2", "A1")])
     ring_six_inflation_hidden = list(["X1", "X2", "Y1", "Y2", "Z1", "Z2"])
 
-    # d = check_d_networks.d_separation_list(ring_six_inflation, ring_six_inflation_hidden)
+    d = check_d_networks.d_separation_list(ring_six_inflation, ring_six_inflation_hidden)
 
-    containers = all_d_separate_relations(d1, marginals_dic, event_non_forbidden, marginals_unique_dic, nodes)
+    containers = all_d_separate_relations(d, marginals_dic, event_non_forbidden, marginals_unique_dic, dic_event_to_variable)
     print(np.size(containers))
