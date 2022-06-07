@@ -61,6 +61,7 @@ def dictionary_marginal_injectable(injectable_sets, dictionary_margin):
     """
     injectable_sets_dictionary_marginals = {}
     for every_injectable_set in injectable_sets:
+        sorted_ijectable_set = np.sort(every_injectable_set)
         injectable_sets_dictionary_marginals[str(every_injectable_set)] = find_marginal_support_given_injectable_set(every_injectable_set,dictionary_margin)
     return injectable_sets_dictionary_marginals
 

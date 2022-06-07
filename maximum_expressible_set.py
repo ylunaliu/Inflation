@@ -80,6 +80,9 @@ if __name__ == "__main__":
     sprial_inflation_hidden = list(["X2", "Y2", "Z2", "X1", "Y1", "Z1"])
 
     injectable,maximum_injectable_sets1, dictionary = find_injectable_sets(sprial_inflation, sprial_inflation_hidden)
+    print(injectable)
+    print(maximum_injectable_sets1)
+    
     expressible = find_expressible_sets(maximum_injectable_sets1, dictionary)
     print(f"here is the expressible set{expressible}")
 

@@ -15,6 +15,7 @@ from utiles_reject_forbidden_events import create_support
 import utiles
 from utiles import break_marginal
 import check_d_networks
+from Is_contradition import is_condraction_for_support_given_inflation
 np.set_printoptions(threshold=sys.maxsize)
 
 def all_d_separate_relations(d_separation_relations: list, marginals_dic, event_non_forbidden, marginals_unique_dic, dic_event_to_variable):
@@ -42,12 +43,12 @@ def all_d_separate_relations(d_separation_relations: list, marginals_dic, event_
     constraint_each_margin_P1 = []
     for each_d_separation_relation in d_separation_relations:
         f.write(f"Here is the d-separation: {each_d_separation_relation}\n")
-        print(number_to_index_from)
-        print(f"here is each d separation {each_d_separation_relation}") #1
+        # print(number_to_index_from)
+        # print(f"here is each d separation {each_d_separation_relation}") #1
         all = generate_formula_given_d_separation(each_d_separation_relation)
         second = all[1]
         combination_marginals, length = generate_combinations(second, unique_support, marginals_unique_dic) # I should move this out of here
-        print(f"length of combinations{length}")
+        # print(f"length of combinations{length}")
         container1, d_assignment_constraint, constraint_each_margin_P = get_all_possiblility(length, all, marginals_dic, event_non_forbidden, combination_marginals, dic_event_to_variable,number_to_index_from, dictionary_variable_margins_P,f)
         container.append(container1)
         d_assignment_constraint1.extend(d_assignment_constraint)
@@ -55,8 +56,9 @@ def all_d_separate_relations(d_separation_relations: list, marginals_dic, event_
 
     f.write(f"with d_assignment_constrant {d_assignment_constraint1}\n")
     f.write(f"with constraint each margin {constraint_each_margin_P1}\n")
-    print(f"This is the size of constraint each margin {len(constraint_each_margin_P1)}")
-    return container
+    print(dictionary_variable_margins_P)
+    # print(f"This is the size of constraint each margin {len(constraint_each_margin_P1)}")
+    return container, d_assignment_constraint1, constraint_each_margin_P1, dictionary_variable_margins_P
 
 def generate_formula_given_d_separation(d_separation_relation: list):
     """
@@ -123,7 +125,6 @@ def get_all_possiblility(length, list_of_elements, marginals_dic_elements, event
     d_assignment_constraint1 = []
     constraint_each_margin_P1 = []
     for i in range(length):
-
         f.write(f"This is for assignment{i}\n")
         events_for_formula, d_assignment_constraint, constraint_each_margin_P= get_events_given_formula(list_of_elements, marginals_dic_elements, i, events_non_forbidden, combination_marginals, dic_event_to_variable, number_to_index_from, dictionary_variable_margins_P,f)
         d_assignment_constraint1.extend(d_assignment_constraint)
@@ -187,7 +188,7 @@ def get_events_given_formula(list_of_elements, marginals_dic_elements, j, events
         # print(f"here is the all events statisfy the conditions{SAT_conversion} for {element} equal to {value_of_element}")
         
         constraint_P = get_constraint_P(SAT_conversion, dictionary_variable_margins_P[str(key_varaible_for_margins)])
-        constraint_each_margin_P.append(constraint_P)
+        constraint_each_margin_P.extend(constraint_P)
         my_file.write(f"Here is the constraint_P: {constraint_P} with p equal to {dictionary_variable_margins_P[str(key_varaible_for_margins)]}\n")
         results.append(some_events)
     
@@ -223,7 +224,6 @@ def find_events_satisfy_condition(value_of_element: np.ndarray, marginals_elemen
             all_events_satisfy.append(events_non_forbidden[i])
             SAT_conversion.append(dic_event_to_variable[str(events_non_forbidden[i])])
            
-    # print(f"This the the SAT_conversion: {SAT_conversion}")
     return np.array(all_events_satisfy), SAT_conversion
 
 def generate_combinations(second_element, unique_support, marginals_unique_dic):
@@ -313,10 +313,10 @@ def get_constraint_d_assignment(P_num_list):
     Produce the constraint for d-separation in cnf form
     P_num_list = [var_firstele...var_lastele]
     """
-    print()
     return ([[-P_num_list[0], -P_num_list[1], P_num_list[2]],[-P_num_list[0], -P_num_list[1], P_num_list[3]],[-P_num_list[3], -P_num_list[2], P_num_list[1]],[-P_num_list[3], -P_num_list[2], P_num_list[0]]])
 
 if __name__ == "__main__":
+
     d1 = list([[['B1'], ['B2'], ['A2']],[['C2'], ['B2'], ['C1']]])
 
     # get_constraint_P([1,5,6], 9)
@@ -349,15 +349,6 @@ if __name__ == "__main__":
     nodes = list(['A1','A2','B1','B2','C1','C2'])
     marginals_dic, marginals_unique_dic= get_marginals_non_forbidden_events(event_non_forbidden, nodes)
    
-   
-    # print(marginals_dic)
-    # all = generate_formula_given_d_separation(d_separation_relation)
-    # # print(all)
-    # second = generate_formula_given_d_separation(d_separation_relation)[1]
-    # # print(second[0])
-    # combination_marginals,length = generate_combinations(second)
-    # # print(length)
-    # get_all_possiblility(length, all, marginals_dic, event_non_forbidden,combination_marginals)
 
 
     ring_six_inflation = nx.DiGraph()
@@ -365,8 +356,31 @@ if __name__ == "__main__":
                                        ("Z1", "C1"), ("Z1", "A2"), ("X2", "A2"), ("X2", "B2"),
                                        ("Y2", "B2"), ("Y2", "C2"), ("Z2", "C2"), ("Z2", "A1")])
     ring_six_inflation_hidden = list(["X1", "X2", "Y1", "Y2", "Z1", "Z2"])
+    w_support = np.array([[1, 0, 0],[0, 1, 0], [0, 0, 1]])
+    orginal_node = ["A", "B", "C"]
 
     d = check_d_networks.d_separation_list(ring_six_inflation, ring_six_inflation_hidden)
+    injectable_sets_dictionary_marginals, dictionary_not_possible, injectable_sets_max= is_condraction_for_support_given_inflation(w_support, ring_six_inflation, ring_six_inflation_hidden, orginal_node)
 
-    containers = all_d_separate_relations(d, marginals_dic, event_non_forbidden, marginals_unique_dic, dic_event_to_variable)
-    print(np.size(containers))
+    container, d_assignment_constraint1, constraint_each_margin_P1, dictionary_variable_margins_P = all_d_separate_relations(d, marginals_dic, event_non_forbidden, marginals_unique_dic, dic_event_to_variable)
+
+    constraint_injectable_1 = []
+    constraint_injectable_0 = []
+    for injectable_set in injectable_sets_max:
+        # print(dictionary_not_possible[str(injectable_set)])
+        for marginals in injectable_sets_dictionary_marginals[str(injectable_set)]:
+            constraint_injectable_1.append([dictionary_variable_margins_P[str([injectable_set, list(marginals)])]])
+            print(f"checking if it exist a dictionary of the number of the marginals: {dictionary_variable_margins_P[str([injectable_set, list(marginals)])]}")
+        for marginals2 in dictionary_not_possible[str(injectable_set)]:
+            constraint_injectable_0.append([-1*dictionary_variable_margins_P[str([injectable_set, list(marginals2)])]])
+    print(constraint_injectable_1)
+    print(constraint_injectable_0)
+
+    constraint_injectable_1.extend(constraint_injectable_0)
+    print(constraint_injectable_1) # I need to add this constraint to the list
+
+
+    d_assignment_constraint1.extend(constraint_each_margin_P1)
+    d_assignment_constraint1.extend(constraint_injectable_1)
+    f = open("myconstraint.txt", "w")
+    f.write(f"{d_assignment_constraint1}")

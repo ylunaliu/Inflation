@@ -69,6 +69,8 @@ def is_condraction_for_support_given_inflation(the_support_to_test, inflation_gr
     # print(f"this is the marginals for expressible sets on non forbi{dictionay_non_forbidden_events}")
 
     is_contradition = utiles.check_for_contracdition(dictionay_non_forbidden_events, key_dictionary_marginal_expressible, maximum_expressible_sets)
+
+    return injectable_sets_dictionary_marginals, dictionary_not_possible, injectable_sets_max
 if __name__ == "__main__":
     # Given an inflation graph
     # sprial_inflation = nx.DiGraph()
@@ -92,4 +94,20 @@ if __name__ == "__main__":
                                        ("Z1", "C1"), ("Z1", "A2"), ("X2", "A2"), ("X2", "B2"),
                                        ("Y2", "B2"), ("Y2", "C2"), ("Z2", "C2"), ("Z2", "A1")])
     ring_six_inflation_hidden = list(["X1", "X2", "Y1", "Y2", "Z1", "Z2"])
-    is_condraction_for_support_given_inflation(w_support, ring_six_inflation, ring_six_inflation_hidden, orginal_node)
+    injectable_sets_dictionary_marginals, dictionary_not_possible, injectable_sets_max= is_condraction_for_support_given_inflation(w_support, ring_six_inflation, ring_six_inflation_hidden, orginal_node)
+    # print(injectable_sets_dictionary_marginals)
+    # print(dictionary_not_possible)
+    # print(injectable_sets_max)
+    
+    constraint_injectable_1 = []
+    constraint_injectable_0 = []
+    
+    for injectable_set in injectable_sets_max:
+        # print(dictionary_not_possible[str(injectable_set)])
+        for marginals in injectable_sets_dictionary_marginals[str(injectable_set)]:
+            constraint_injectable_1.append([injectable_set, list(marginals)])
+        for marginals2 in dictionary_not_possible[str(injectable_set)]:
+            constraint_injectable_0.append([injectable_set, list(marginals2)])
+        
+    print(constraint_injectable_1)
+    print(constraint_injectable_0)
