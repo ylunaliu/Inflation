@@ -30,6 +30,7 @@ def d_separation_list(graph, hidden_nodes):
         for j in range(len(sets_z)):
             if(nx.d_separated(graph, {combination[i][0]}, {combination[i][1]}, set(sets_z[j]))==True):
                 for_each_d_separation.append([[combination[i][0]], [combination[i][1]], sets_z[j]])
+                print(f"{combination[i][0]} and {combination[i][1]} are d-separated by {sets_z[j]}")
         d_separation_list1.extend(for_each_d_separation)
 
     return d_separation_list1
@@ -65,11 +66,16 @@ if __name__ == "__main__":
     # unrelated_confounders2.add_edges_from([("U1", "A"), ("U1", "D"), ("U2", "B"), ("U2", "D"), ("D#", "A"), ("D#", "B")])
     # unrelated_confounders_hidden2 = list(["U1", "U2"])
 
-    ring_six_inflation = nx.DiGraph()
-    ring_six_inflation.add_edges_from([("X1", "A1"), ("X1", "B1"), ("Y1", "B1"), ("Y1", "C1"), 
-                                       ("Z1", "C1"), ("Z1", "A2"), ("X2", "A2"), ("X2", "B2"),
-                                       ("Y2", "B2"), ("Y2", "C2"), ("Z2", "C2"), ("Z2", "A1")])
-    ring_six_inflation_hidden = list(["X1", "X2", "Y1", "Y2", "Z1", "Z2"])
-    d = d_separation_list(sprial_inflation, sprial_inflation_hidden)
-    print(d)
+    # ring_six_inflation = nx.DiGraph()
+    # ring_six_inflation.add_edges_from([("X1", "A1"), ("X1", "B1"), ("Y1", "B1"), ("Y1", "C1"), 
+    #                                    ("Z1", "C1"), ("Z1", "A2"), ("X2", "A2"), ("X2", "B2"),
+    #                                    ("Y2", "B2"), ("Y2", "C2"), ("Z2", "C2"), ("Z2", "A1")])
+    # ring_six_inflation_hidden = list(["X1", "X2", "Y1", "Y2", "Z1", "Z2"])
+
+
+    mDAG8 = nx.DiGraph()
+    mDAG8.add_edges_from([("U1", "A"), ("U1","B"), ("U2", "A"), ("U2", "C"), ("U3", "A"), ("U3", "D"), ("A2", "B"), ("A2", "C"), ("A2", "D"),("C2", "D")])
+    mDAG8_hidden = list(["U1", "U2", "U3"])
+    d = d_separation_list(mDAG8, mDAG8_hidden)
+    print(len(d))
 

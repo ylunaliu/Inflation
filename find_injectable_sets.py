@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import itertools
 from itertools import chain
-
+from node_split import node_split
 
 def find_injectable_sets(graph, hidden_nodes):
     """ 
@@ -36,11 +36,14 @@ def find_injectable_sets(graph, hidden_nodes):
 
     # Get all the observed nodes
     nodes_observed = remove_element_list(hidden_nodes, nodes)
+    # print(f"here is the observed nodes{nodes_observed}")
     
     # Get all the ancestors for every node with splitting
     nodes_ancestor = []
     for node in nodes_observed:
+        # print(f"for each node {node} in node_observed")
         ancestors = list(nx.ancestors(graph, node))
+        # print(f"here is the ancestors{ancestors}")
         split_index = []
         split_key = []
         for i in range(len(ancestors)):
@@ -48,6 +51,9 @@ def find_injectable_sets(graph, hidden_nodes):
             split_key.append(split_node[0])
             split_index.append(split_node[1:])
             diction = dict(zip(split_key, split_index))
+            # print(f"here is the dictionary {diction}")
+
+        # print(f"this is the nodes_ancestor: {nodes_ancestor}")
         nodes_ancestor.append(diction)
 
   
@@ -59,6 +65,7 @@ def find_injectable_sets(graph, hidden_nodes):
 
     # Get all combination that could be useful to construct the subgraph for injectable sets
     combinations = list(itertools.combinations(nodes_observed,2))
+    # print(combinations)
 
     # Build a subgraph for injectable graph
     subgraph_injectable = nx.Graph()
@@ -107,6 +114,7 @@ def find_injectable_sets(graph, hidden_nodes):
     for element in result:
         injectable_sets.append([element])
 
+    # print(f"here is the dictionary {dictionary}")
     return injectable_sets_max, injectable_sets, dictionary
 
 def split_anynode(node):
@@ -163,10 +171,15 @@ if __name__ == "__main__":
                                 ("Z1", "C1"), ("Z1", "B1"), ("Z1", "C2")])
     sprial_inflation_hidden = list(["X2", "Y2", "Z2", "X1", "Y1", "Z1"])
 
-    cut_inflation = nx.DiGraph()
-    cut_inflation.add_edges_from([("Y2", "A2"), ("X1", "A2"), ("X1", "C1"), ("Z1", "C1"), ("Z1", "B1"), ("Y1", "B1")])
-    cut_inflation_hidden = list(["Y1", "Y2", "X1", "Z1"])
+    # cut_inflation = nx.DiGraph()
+    # cut_inflation.add_edges_from([("Y2", "A2"), ("X1", "A2"), ("X1", "C1"), ("Z1", "C1"), ("Z1", "B1"), ("Y1", "B1")])
+    # cut_inflation_hidden = list(["Y1", "Y2", "X1", "Z1"])
     injectable_sets_max, injectable_sets, dictionary = find_injectable_sets(sprial_inflation, sprial_inflation_hidden)
     print(injectable_sets_max)
-    print(injectable_sets)
-    print(dictionary)
+    #example2: Instrumental graph
+    # instrumental = nx.DiGraph()
+    # instrumental.add_edges_from([("A1", "D1"), ("D1", "B1"), ("U1", "D1"), ("U1", "B1")])
+    # instrumental_hidden = list(["U1"])
+    
+    # new_graph = node_split(instrumental, instrumental_hidden)
+    # injectable_sets_max, injectable_sets, dictionary = find_injectable_sets(new_graph, instrumental_hidden)

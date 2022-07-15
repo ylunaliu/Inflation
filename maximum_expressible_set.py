@@ -70,6 +70,7 @@ def maximum_expressible(expressible_set):
             acc_joined.append(joined)
  
     return acc, acc_joined
+
 if __name__ == "__main__":
     sprial_inflation = nx.DiGraph()
     sprial_inflation.add_edges_from([("X2", "C2"), ("Z2", "B2"), ("Y2", "A2"),
@@ -82,7 +83,7 @@ if __name__ == "__main__":
     injectable,maximum_injectable_sets1, dictionary = find_injectable_sets(sprial_inflation, sprial_inflation_hidden)
     print(injectable)
     print(maximum_injectable_sets1)
-    
+
     expressible = find_expressible_sets(maximum_injectable_sets1, dictionary)
     print(f"here is the expressible set{expressible}")
 

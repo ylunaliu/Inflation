@@ -2,8 +2,10 @@ from enum import unique
 from re import I
 from xml.dom.minidom import Element
 from sympy import evaluate, sec
+from find_injectable_sets import split
 from maximum_expressible_set import append_list
 from ssl import ALERT_DESCRIPTION_BAD_RECORD_MAC
+from pysat.solvers import Solver, Minisat22
 from os import dup
 from platform import node
 import sys
@@ -16,27 +18,26 @@ import utiles
 from utiles import break_marginal
 import check_d_networks
 from Is_contradition import is_condraction_for_support_given_inflation
+from node_split import node_split
 np.set_printoptions(threshold=sys.maxsize)
 
-def all_d_separate_relations(d_separation_relations: list, marginals_dic, event_non_forbidden, marginals_unique_dic, dic_event_to_variable):
+def all_d_separate_relations(d_separation_relations: list, marginals_dic, event_non_forbidden, marginals_unique_dic, dic_event_to_variable,support):
     """
     Description: get the final containors, the largerst wrappers, for each d-separation-relaion, we get all combinations of value that the d-separation relation
-                can take, then for each combinations, we get the value that the elements of the d-separation can take, then for each element, we get the events that
-                satisfy the condition.
-                List(All d-separation)relation) with size (num of d-separation-relations) of List(Combinations) with size(num(combinations)) of List(elements) with size 4 with List(events statsfy combinations)
+                 can take, then for each combinations, we get the value that the elements of the d-separation can take, then for each element, we get the events that
+                 satisfy the condition.
+                 List(All d-separation)relation) with size (num of d-separation-relations) of List(Combinations) with size(num(combinations)) of List(elements) with size 4 with List(events statsfy combinations)
     
     Parameters:
     ------------
     d-separation-relations: All d-separation relations to consider
     marginals_dic: A dictionary of marginals for the non-forbidden events
     """
-    unique_support = list([0,1])
-    # global number_to_index_from
-    # number_to_index_from =len(event_non_forbidden)
+    unique_support = np.unique(support)
 
     number_to_index_from = {}
     f = open("myfile.txt", "w")
-    number_to_index_from['index'] = len(event_non_forbidden)+1
+    number_to_index_from['index'] = len(event_non_forbidden)
     dictionary_variable_margins_P = {}
     container = []
     d_assignment_constraint1 = [] 
@@ -48,7 +49,7 @@ def all_d_separate_relations(d_separation_relations: list, marginals_dic, event_
         all = generate_formula_given_d_separation(each_d_separation_relation)
         second = all[1]
         combination_marginals, length = generate_combinations(second, unique_support, marginals_unique_dic) # I should move this out of here
-        # print(f"length of combinations{length}")
+        # print(f"here is the combination_margianls{combination_marginals}")
         container1, d_assignment_constraint, constraint_each_margin_P = get_all_possiblility(length, all, marginals_dic, event_non_forbidden, combination_marginals, dic_event_to_variable,number_to_index_from, dictionary_variable_margins_P,f)
         container.append(container1)
         d_assignment_constraint1.extend(d_assignment_constraint)
@@ -56,9 +57,9 @@ def all_d_separate_relations(d_separation_relations: list, marginals_dic, event_
 
     f.write(f"with d_assignment_constrant {d_assignment_constraint1}\n")
     f.write(f"with constraint each margin {constraint_each_margin_P1}\n")
-    print(dictionary_variable_margins_P)
+    # print(f"number to index from {number_to_index_from}")
     # print(f"This is the size of constraint each margin {len(constraint_each_margin_P1)}")
-    return container, d_assignment_constraint1, constraint_each_margin_P1, dictionary_variable_margins_P
+    return container, d_assignment_constraint1, constraint_each_margin_P1, dictionary_variable_margins_P, number_to_index_from
 
 def generate_formula_given_d_separation(d_separation_relation: list):
     """
@@ -80,6 +81,7 @@ def generate_formula_given_d_separation(d_separation_relation: list):
     second_element = np.sort(append_list(d_separation_relation))
     third_element = np.sort(append_list(list([d_separation_relation[0], d_separation_relation[2]])))
     fourth_element = np.sort(append_list(list([d_separation_relation[1], d_separation_relation[2]])))
+    # print(list([first_element, second_element, third_element, fourth_element]))
     return list([first_element, second_element, third_element, fourth_element])
 
 def get_marginals_non_forbidden_events(events, nodes:list):
@@ -126,6 +128,7 @@ def get_all_possiblility(length, list_of_elements, marginals_dic_elements, event
     constraint_each_margin_P1 = []
     for i in range(length):
         f.write(f"This is for assignment{i}\n")
+        # print(f"This is for assignment {i}")
         events_for_formula, d_assignment_constraint, constraint_each_margin_P= get_events_given_formula(list_of_elements, marginals_dic_elements, i, events_non_forbidden, combination_marginals, dic_event_to_variable, number_to_index_from, dictionary_variable_margins_P,f)
         d_assignment_constraint1.extend(d_assignment_constraint)
         constraint_each_margin_P1.extend(constraint_each_margin_P)
@@ -150,6 +153,7 @@ def get_events_given_formula(list_of_elements, marginals_dic_elements, j, events
     ------------
     results: A list contains [[all possible events for element1], [all possible events for element2], [all possible events for element3],  [all possible events for element4]]
              For example, P(CD)P(ABCD) = P(ACD)P(BCD) with A=a1, B=b1, C=c1, D=d1
+             P(ab)=p(a)p(b)
              [[all possible events for C=c1, D=d1], [all possible events for A=a1, B=b1, C=c1, D=d1], [all possible events for A=a1, C=c1, D=d1], [all possible events for B=b1, C=c1, D=d1]
     """
     results = []
@@ -159,38 +163,41 @@ def get_events_given_formula(list_of_elements, marginals_dic_elements, j, events
     # Loop through the elements
 
     for i, element in enumerate(list_of_elements):
-        value_of_element = []
-        # print(f"This is the elemnt {element}")
+        if(i==0 and len(element)==0):
+            # print(f"This is the elemnt {element}")
+            pass
+        else:
+            value_of_element = []
+            # print(f"This is the elemnt {element}")
         # Get the specific value that this element can take from combination_marginals
-        for item in element:
-            value_item = combination_maginals[item][j]
-            # print(f"This is the node{item} the index{i}")
-            value_of_element.append(value_item)
-        
-        # print(f"value_of_element{value_of_element}")
+            for item in element:
+                value_item = combination_maginals[item][j]
+                # print(f"This is the node{item} the index{i}")
+                value_of_element.append(value_item)
+    
         # print(f"This is the value of element{value_of_element}")
 
         # Get the marginals for that element in the non-forbidden events
-        marginals_element = utiles.find_marginal_support_given_set_with_repitation(element, marginals_dic_elements)
-        # print(f"This is the marginals_elements {element}")
-        key_varaible_for_margins = [list(element), value_of_element]
-        if(not (str(key_varaible_for_margins) in dictionary_variable_margins_P)):
-            value_number_to_index_from = number_to_index_from["index"]
-            number_to_index_from["index"] = value_number_to_index_from+ 1
-            dictionary_variable_margins_P[str(key_varaible_for_margins)] = number_to_index_from["index"]
+            marginals_element = utiles.find_marginal_support_given_set_with_repitation(element, marginals_dic_elements)
+        # print(f"This is the marginals_elements {marginals_element}")
+            key_varaible_for_margins = [list(element), value_of_element]
+            if(not (str(key_varaible_for_margins) in dictionary_variable_margins_P)):
+                value_number_to_index_from = number_to_index_from["index"]
+                number_to_index_from["index"] = value_number_to_index_from+ 1
+                dictionary_variable_margins_P[str(key_varaible_for_margins)] = number_to_index_from["index"]
             # print(f"here is the label for p: {value_number_to_index_from+ 1}\n")
         
         # Get the constraints for Ps
 
-        constraint_P_list.append(dictionary_variable_margins_P[str(key_varaible_for_margins)])
+            constraint_P_list.append(dictionary_variable_margins_P[str(key_varaible_for_margins)])
         # print(f"dictionary_variavle_marginals{dictionary_variable_margins_P}")
-        some_events, SAT_conversion = find_events_satisfy_condition(value_of_element, marginals_element, events_non_forbidden, dic_event_to_variable)
+            some_events, SAT_conversion = find_events_satisfy_condition(value_of_element, marginals_element, events_non_forbidden, dic_event_to_variable)
         # print(f"here is the all events statisfy the conditions{SAT_conversion} for {element} equal to {value_of_element}")
         
-        constraint_P = get_constraint_P(SAT_conversion, dictionary_variable_margins_P[str(key_varaible_for_margins)])
-        constraint_each_margin_P.extend(constraint_P)
-        my_file.write(f"Here is the constraint_P: {constraint_P} with p equal to {dictionary_variable_margins_P[str(key_varaible_for_margins)]}\n")
-        results.append(some_events)
+            constraint_P = get_constraint_P(SAT_conversion, dictionary_variable_margins_P[str(key_varaible_for_margins)])
+            constraint_each_margin_P.extend(constraint_P)
+            my_file.write(f"Here is the constraint_P: {constraint_P} with p equal to {dictionary_variable_margins_P[str(key_varaible_for_margins)]}\n")
+            results.append(some_events)
     
     # print(f"This is the constrain given by one assignment on P {constraint_each_margin_P}")
     d_assignment_constraint = get_constraint_d_assignment(constraint_P_list)
@@ -246,7 +253,7 @@ def generate_combinations(second_element, unique_support, marginals_unique_dic):
     filter_not_complete_value = []
     for i, node in enumerate(second_element):
         if(not np.array_equal(marginals_unique_dic[node], np.array(unique_support))):
-            print(np.array_equal(marginals_unique_dic[node], np.array(unique_support)))
+            # print(np.array_equal(marginals_unique_dic[node], np.array(unique_support)))
             filter_not_complete.append(i)
             filter_not_complete_value.append(np.setdiff1d(np.array(unique_support), marginals_unique_dic[node]))
     
@@ -265,8 +272,8 @@ def generate_combinations(second_element, unique_support, marginals_unique_dic):
 def filter_not_complete_events(combinations, filter_not_complete, filter_not_complete_value):
     index_to_abandon = []
     new_combinations = []
-    for each_node_index in filter_not_complete:
-        for forbidden_value in filter_not_complete_value[each_node_index]:
+    for i, each_node_index in enumerate(filter_not_complete):
+        for forbidden_value in filter_not_complete_value[i]:
             marginal = combinations[:,each_node_index]
             index_to_abandon.extend(np.where(marginal==forbidden_value)[0])
     
@@ -276,6 +283,7 @@ def filter_not_complete_events(combinations, filter_not_complete, filter_not_com
 
     for index in index_to_keep:
         new_combinations.append(combinations[index])
+
 
     return(new_combinations)
 
@@ -313,74 +321,87 @@ def get_constraint_d_assignment(P_num_list):
     Produce the constraint for d-separation in cnf form
     P_num_list = [var_firstele...var_lastele]
     """
-    return ([[-P_num_list[0], -P_num_list[1], P_num_list[2]],[-P_num_list[0], -P_num_list[1], P_num_list[3]],[-P_num_list[3], -P_num_list[2], P_num_list[1]],[-P_num_list[3], -P_num_list[2], P_num_list[0]]])
+    if(len(P_num_list)==3):
+        return ([[-P_num_list[0], P_num_list[1]],[-P_num_list[0], P_num_list[2]],[-P_num_list[2], -P_num_list[1], P_num_list[0]]])
+    else:
+        return ([[-P_num_list[0], -P_num_list[1], P_num_list[2]],[-P_num_list[0], -P_num_list[1], P_num_list[3]],[-P_num_list[3], -P_num_list[2], P_num_list[1]],[-P_num_list[3], -P_num_list[2], P_num_list[0]]])
 
-if __name__ == "__main__":
-
-    d1 = list([[['B1'], ['B2'], ['A2']],[['C2'], ['B2'], ['C1']]])
-
-    # get_constraint_P([1,5,6], 9)
-    # get_constraint_d_assignment([1,2,3,4])
-    # For my reference, to use this one, I need
-    #                                   1. Non-forbidden-events generated from is_contradiction
-    #                                   2. Nodes of the inflation graph
-    #                                   3. Get the marginals for nodes
-    #                                   4. All the d-separation relations
-    event_non_forbidden = np.array([[0, 0, 0, 0, 0, 0],
-                                    [0, 0, 0, 0, 0, 1],
-                                    [0, 0, 0, 0, 1, 0],
-                                    [0, 0, 0, 0, 1, 1],
-                                    [0, 0, 0, 1, 0, 0],
-                                    [0, 0, 0, 1, 1, 0],
-                                    [0, 0, 1, 0, 0, 0],
-                                    [0, 0, 1, 0, 0, 1],
-                                    [0, 0, 1, 1, 0, 0],
-                                    [0, 1, 0, 0, 0, 0],
-                                    [0, 1, 0, 0, 0, 1],
-                                    [0, 1, 1, 0, 0, 0],
-                                    [0, 1, 1, 0, 0, 1],
-                                    [1, 0, 0, 0, 0, 0],
-                                    [1, 0, 0, 0, 1, 0],
-                                    [1, 0, 0, 1, 0, 0],
-                                    [1, 0, 0, 1, 1, 0],
-                                    [1, 1, 0, 0, 0, 0]])
-
-    dic_event_to_variable = non_forbidden_events_variable_dic(event_non_forbidden)
-    nodes = list(['A1','A2','B1','B2','C1','C2'])
-    marginals_dic, marginals_unique_dic= get_marginals_non_forbidden_events(event_non_forbidden, nodes)
-   
-
-
-    ring_six_inflation = nx.DiGraph()
-    ring_six_inflation.add_edges_from([("X1", "A1"), ("X1", "B1"), ("Y1", "B1"), ("Y1", "C1"), 
-                                       ("Z1", "C1"), ("Z1", "A2"), ("X2", "A2"), ("X2", "B2"),
-                                       ("Y2", "B2"), ("Y2", "C2"), ("Z2", "C2"), ("Z2", "A1")])
-    ring_six_inflation_hidden = list(["X1", "X2", "Y1", "Y2", "Z1", "Z2"])
-    w_support = np.array([[1, 0, 0],[0, 1, 0], [0, 0, 1]])
-    orginal_node = ["A", "B", "C"]
-
-    d = check_d_networks.d_separation_list(ring_six_inflation, ring_six_inflation_hidden)
-    injectable_sets_dictionary_marginals, dictionary_not_possible, injectable_sets_max= is_condraction_for_support_given_inflation(w_support, ring_six_inflation, ring_six_inflation_hidden, orginal_node)
-
-    container, d_assignment_constraint1, constraint_each_margin_P1, dictionary_variable_margins_P = all_d_separate_relations(d, marginals_dic, event_non_forbidden, marginals_unique_dic, dic_event_to_variable)
-
+def get_all_constraint_with_injectable_set_marginal(injectable_sets_max, injectable_sets_dictionary_marginals,dictionary_variable_margins_P,marginals_dic, d_assignment_constraint1,constraint_each_margin_P1):
     constraint_injectable_1 = []
     constraint_injectable_0 = []
     for injectable_set in injectable_sets_max:
-        # print(dictionary_not_possible[str(injectable_set)])
         for marginals in injectable_sets_dictionary_marginals[str(injectable_set)]:
-            constraint_injectable_1.append([dictionary_variable_margins_P[str([injectable_set, list(marginals)])]])
-            print(f"checking if it exist a dictionary of the number of the marginals: {dictionary_variable_margins_P[str([injectable_set, list(marginals)])]}")
+            if str([injectable_set, list(marginals)]) in dictionary_variable_margins_P:
+                constraint_injectable_1.append([dictionary_variable_margins_P[str([injectable_set, list(marginals)])]])
+            else:
+                marginals_append = []
+                for node1 in injectable_set:
+                        marginals_append.append(marginals_dic[str(node1)])
+                for i, array in enumerate((np.array(marginals_append).T)):
+                    if(np.array_equal(array, marginals)):
+                        constraint_injectable_1.append([i+1])
+
         for marginals2 in dictionary_not_possible[str(injectable_set)]:
-            constraint_injectable_0.append([-1*dictionary_variable_margins_P[str([injectable_set, list(marginals2)])]])
-    print(constraint_injectable_1)
-    print(constraint_injectable_0)
+            if str([injectable_set, list(marginals2)]) in dictionary_variable_margins_P:
+                constraint_injectable_0.append([-1*dictionary_variable_margins_P[str([injectable_set, list(marginals2)])]])
+            else:
+                pass
+
 
     constraint_injectable_1.extend(constraint_injectable_0)
-    print(constraint_injectable_1) # I need to add this constraint to the list
-
-
     d_assignment_constraint1.extend(constraint_each_margin_P1)
     d_assignment_constraint1.extend(constraint_injectable_1)
+
+    return d_assignment_constraint1
+
+if __name__ == "__main__":
+    # ring_six_inflation = nx.DiGraph()
+    # ring_six_inflation.add_edges_from([("X1", "A1"), ("X1", "B1"), ("Y1", "B1"), ("Y1", "C1"), 
+    #                                    ("Z1", "C1"), ("Z1", "A2"), ("X2", "A2"), ("X2", "B2"),
+    #                                    ("Y2", "B2"), ("Y2", "C2"), ("Z2", "C2"), ("Z2", "A1")])
+    # ring_six_inflation_hidden = list(["X1", "X2", "Y1", "Y2", "Z1", "Z2"])
+    
+    # cut_inflation = nx.DiGraph()
+    # cut_inflation.add_edges_from([("Y2", "A2"), ("X1", "A2"), ("X1", "C1"), ("Z1", "C1"), ("Z1", "B1"), ("Y1", "B1")])
+    # cut_inflation_hidden = list(["Y1", "Y2", "X1", "Z1"])
+    # sprial_inflation = nx.DiGraph()
+    # sprial_inflation.add_edges_from([("X2", "C2"), ("Z2", "B2"), ("Y2", "A2"),
+    #                             ("X1", "A2"), ("X1", "A1"), ("X1", "C1"), 
+    #                             ("Y1", "A1"), ("Y1", "B1"), ("Y1", "B2"), 
+    #                             ("Z1", "C1"), ("Z1", "B1"), ("Z1", "C2")])
+    # sprial_inflation_hidden = list(["X2", "Y2", "Z2", "X1", "Y1", "Z1"])
+    # unrelated_confounders = nx.DiGraph()
+    # unrelated_confounders.add_edges_from([("U1", "A1"), ("U1", "D1"), ("U2", "B1"), ("U2", "D1"), ("D1", "A1"), ("D1", "B1")])
+    # unrelated_confounders_hidden = list(["U1", "U2"])
+    mDAG8 = nx.DiGraph()
+    mDAG8.add_edges_from([("U1", "A1"), ("U1","B1"), ("U2", "A1"), ("U2", "C1"), ("U3", "A1"), ("U3", "D1"), ("A2", "B1"), ("A2", "C1"), ("A2", "D1"),("C2", "D1")])
+    mDAG8_hidden = list(["U1", "U2", "U3"])
+    #example2: Instrumental graph
+    # instrumental = nx.DiGraph()
+    # instrumental.add_edges_from([("A1", "D1"), ("D1", "B1"), ("U1", "D1"), ("U1", "B1")])
+    # instrumental_hidden = list(["U1"])
+    
+    # new_graph = node_split(instrumental, instrumental_hidden)
+
+    w_support = np.array([[0, 0, 0, 0], [0, 1, 0, 1], [1, 0, 0, 0], [1, 1, 1, 0]]) 
+
+    nodes = list(['A1','B1','C1','D1','C2','A2'])
+    orginal_node = ["A", "B", "C", "D"]
+
+    injectable_sets_dictionary_marginals, dictionary_not_possible, injectable_sets_max, event_non_forbidden= is_condraction_for_support_given_inflation(w_support,  mDAG8, mDAG8_hidden, orginal_node)
+
+    dic_event_to_variable = non_forbidden_events_variable_dic(event_non_forbidden)
+    print(event_non_forbidden)
+    marginals_dic, marginals_unique_dic= get_marginals_non_forbidden_events(event_non_forbidden, nodes)
+   
+    d = check_d_networks.d_separation_list(mDAG8, mDAG8_hidden)
+    print(d)
+
+    container, d_assignment_constraint1, constraint_each_margin_P1, dictionary_variable_margins_P,number_to_index_from = all_d_separate_relations(d, marginals_dic, event_non_forbidden, marginals_unique_dic, dic_event_to_variable, w_support)
+
+    constraint = get_all_constraint_with_injectable_set_marginal(injectable_sets_max, injectable_sets_dictionary_marginals, dictionary_variable_margins_P,marginals_dic,d_assignment_constraint1,constraint_each_margin_P1)
     f = open("myconstraint.txt", "w")
-    f.write(f"{d_assignment_constraint1}")
+    f.write(f"{constraint}")
+   
+    with Minisat22(bootstrap_with =  constraint) as m:
+         print(m.solve())
